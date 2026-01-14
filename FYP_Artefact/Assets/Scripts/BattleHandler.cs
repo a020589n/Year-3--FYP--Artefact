@@ -19,6 +19,8 @@ public class BattleHandler : MonoBehaviour
     // Public references for UI / turn system
     public CharacterBattle PlayerCharacter { get; private set; }
     public CharacterBattle EnemyCharacter { get; private set; }
+    
+    public CharacterBattle ActiveCharacter { get; private set; }
 
     private State _state;
     private enum State
@@ -43,6 +45,8 @@ public class BattleHandler : MonoBehaviour
         PlayerCharacter = SpawnCharacter(true);
         EnemyCharacter  = SpawnCharacter(false);
         
+        SetActiveCharacter(PlayerCharacter);
+        
         _state = State.WaitingForPlayer;
     }
 
@@ -55,7 +59,7 @@ public class BattleHandler : MonoBehaviour
             {
                 _state = State.Busy;
                 
-                PlayerCharacter.Attack(EnemyCharacter, () => { _state = State.WaitingForPlayer; });
+                PlayerCharacter.Attack(EnemyCharacter, () => { ChooseNextActiveCharacter(); });
             }
         }
         
@@ -82,6 +86,28 @@ public class BattleHandler : MonoBehaviour
 
         character.Setup(isPlayerTeam);
         return character;
+    }
+
+    private void SetActiveCharacter(CharacterBattle character)
+    {
+        ActiveCharacter = character;
+    }
+
+    private void ChooseNextActiveCharacter()
+    {
+        if (ActiveCharacter == PlayerCharacter)
+        {
+            SetActiveCharacter(EnemyCharacter);
+            
+            _state = State.Busy;
+            
+            EnemyCharacter.Attack(PlayerCharacter, () => { ChooseNextActiveCharacter(); });
+        }
+        else
+        {
+            SetActiveCharacter(PlayerCharacter);
+            _state = State.WaitingForPlayer;
+        }
     }
 }
 

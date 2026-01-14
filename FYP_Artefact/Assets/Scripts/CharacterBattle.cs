@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterBase))]
@@ -32,17 +33,21 @@ public class CharacterBattle : MonoBehaviour
         // Animator will already default to Idle
     }
 
-    // ---------- BATTLE COMMANDS ----------
+    #region ---------- BATTLE COMMANDS ----------
+    
+        public void Guard()
+        {
+            characterBase.Guard();
+        }
 
-    public void Guard()
-    {
-        characterBase.Guard();
-    }
+        public void Attack(CharacterBattle target, Action onAttackComplete)
+        {
+            characterBase.AttackEnemy(target.transform, onAttackComplete);
+        }
+        
+    #endregion
 
-    public void Attack(CharacterBattle target)
-    {
-        characterBase.AttackEnemy(target.transform);
-    }
+    
 }
 
 

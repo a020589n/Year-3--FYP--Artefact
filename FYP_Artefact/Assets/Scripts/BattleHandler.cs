@@ -1,4 +1,7 @@
+using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 public class BattleHandler : MonoBehaviour
 {
@@ -9,10 +12,20 @@ public class BattleHandler : MonoBehaviour
     [SerializeField, Range(0, 10)] private float positionOffsetFromCentre = 3f;
 
     public static BattleHandler Instance { get; private set; }
+    
+    //TEMPORARY TESTING PURPOSES ONLY
+    [SerializeField] private InputAction attack;
 
     // Public references for UI / turn system
     public CharacterBattle PlayerCharacter { get; private set; }
     public CharacterBattle EnemyCharacter { get; private set; }
+
+    private State _state;
+    private enum State
+    {
+        WaitingForPlayer,
+        Busy,
+    }
 
     private void Awake()
     {
@@ -29,6 +42,33 @@ public class BattleHandler : MonoBehaviour
     {
         PlayerCharacter = SpawnCharacter(true);
         EnemyCharacter  = SpawnCharacter(false);
+        
+        _state = State.WaitingForPlayer;
+    }
+
+    private void Update()
+    {
+        if (_state == State.WaitingForPlayer)
+        {
+            
+            if (attack.triggered)
+            {
+                _state = State.Busy;
+                
+                PlayerCharacter.Attack(EnemyCharacter, () => { _state = State.WaitingForPlayer; });
+            }
+        }
+        
+    }
+    
+    private void OnEnable()
+    {
+        attack.Enable();
+    }
+    
+    private void OnDisable()
+    {
+        attack.Disable();
     }
 
     private CharacterBattle SpawnCharacter(bool isPlayerTeam)
@@ -44,5 +84,4 @@ public class BattleHandler : MonoBehaviour
         return character;
     }
 }
-
 

@@ -371,6 +371,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BattleHandler
   characterPrefab: {fileID: 7758601334429827521, guid: c55e626a32b96f249a567e6cac7d56d9, type: 3}
   positionOffsetFromCentre: 7
+  attack:
+    m_Name: Attack
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 39d55b3d-19a2-419c-8067-052329c5ff73
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 6a469548-1230-46e6-a6e9-51f42dc463d8
+      m_Path: <Keyboard>/space
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Attack
+      m_Flags: 0
+    m_Flags: 0
 --- !u!4 &1421534178
 Transform:
   m_ObjectHideFlags: 0

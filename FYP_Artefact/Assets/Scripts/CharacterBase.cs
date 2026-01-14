@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -5,17 +6,20 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class CharacterBase : MonoBehaviour
 {
-    // Animator hashes
-    private static readonly int Run = Animator.StringToHash("Run");
-    private static readonly int Attack = Animator.StringToHash("Attack");
-    private static readonly int GuardTrigger = Animator.StringToHash("Guard");
+    #region Animator hashes
+
+        private static readonly int Run = Animator.StringToHash("Run");
+        private static readonly int Attack = Animator.StringToHash("Attack");
+        private static readonly int GuardTrigger = Animator.StringToHash("Guard");
+    
+    #endregion
 
     [Header("Components")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Animator animator;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 10f;
     [SerializeField] private float attackDuration = 0.6f;
 
     private Vector3 startPos;
@@ -35,34 +39,38 @@ public class CharacterBase : MonoBehaviour
         startPos = transform.position;
     }
 
-    // ---------- ANIMATION ----------
-    public void SetRun(bool value)
-    {
-        animator.SetBool(Run, value);
-    }
+    #region ---------- ANIMATION ----------
+    
+        public void SetRun(bool value)
+        {
+            animator.SetBool(Run, value);
+        }
 
-    public void Guard()
-    {
-        animator.SetTrigger(GuardTrigger);
-    }
+        public void Guard()
+        {
+            animator.SetTrigger(GuardTrigger);
+        }
+    
+    #endregion
 
-    // ---------- ATTACK ----------
-    public void AttackEnemy(Transform enemy)
+    #region---------- ATTACK ----------
+    
+    public void AttackEnemy(Transform target, Action onAttackComplete = null)
     {
         StopAllCoroutines();
-        StartCoroutine(AttackSequence(enemy));
+        StartCoroutine(AttackSequence(target, onAttackComplete));
     }
 
-    private IEnumerator AttackSequence(Transform enemy)
+    private IEnumerator AttackSequence(Transform target, Action onAttackComplete)
     {
         // Run toward enemy
         SetRun(true);
 
-        while (Vector3.Distance(transform.position, enemy.position) > 0.5f)
+        while (Vector3.Distance(transform.position, target.position) > 0.5f)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position,
-                enemy.position,
+                target.position,
                 moveSpeed * Time.deltaTime
             );
             yield return null;
@@ -89,15 +97,23 @@ public class CharacterBase : MonoBehaviour
         }
 
         SetRun(false);
+        
+        onAttackComplete?.Invoke();
     }
 
-    // ---------- FACING ----------
-    public void FaceDirection(bool faceRight)
-    {
-        Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * (faceRight ? 1 : -1);
-        transform.localScale = scale;
-    }
+    #endregion
+
+
+    #region ---------- FACING ----------
+    
+        public void FaceDirection(bool faceRight)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = Mathf.Abs(scale.x) * (faceRight ? 1 : -1);
+            transform.localScale = scale;
+        }
+    
+    #endregion
 }
 
 

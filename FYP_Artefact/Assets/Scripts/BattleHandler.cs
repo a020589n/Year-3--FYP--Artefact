@@ -95,6 +95,8 @@ public class BattleHandler : MonoBehaviour
 
     private void ChooseNextActiveCharacter()
     {
+        if (IsBattleOver()) { return; }
+        
         if (ActiveCharacter == PlayerCharacter)
         {
             SetActiveCharacter(EnemyCharacter);
@@ -108,6 +110,20 @@ public class BattleHandler : MonoBehaviour
             SetActiveCharacter(PlayerCharacter);
             _state = State.WaitingForPlayer;
         }
+    }
+
+    private bool IsBattleOver()
+    {
+        if (PlayerCharacter.IsDead())
+        {
+            return true;
+        }
+        if (EnemyCharacter.IsDead())
+        {
+            return true;
+        }
+        
+        return false;
     }
 }
 

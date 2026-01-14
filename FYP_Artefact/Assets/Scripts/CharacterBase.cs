@@ -55,13 +55,13 @@ public class CharacterBase : MonoBehaviour
 
     #region---------- ATTACK ----------
     
-    public void AttackEnemy(Transform target, Action onAttackComplete = null)
+    public void AttackEnemy(Transform target, Action onHit = null, Action onAttackComplete = null)
     {
         StopAllCoroutines();
-        StartCoroutine(AttackSequence(target, onAttackComplete));
+        StartCoroutine(AttackSequence(target,onHit, onAttackComplete));
     }
 
-    private IEnumerator AttackSequence(Transform target, Action onAttackComplete)
+    private IEnumerator AttackSequence(Transform target, Action onHit, Action onAttackComplete)
     {
         // Run toward enemy
         SetRun(true);
@@ -79,6 +79,7 @@ public class CharacterBase : MonoBehaviour
         // Stop & attack
         SetRun(false);
         animator.SetTrigger(Attack);
+        onHit?.Invoke();
 
         // Wait for attack animation
         yield return new WaitForSeconds(attackDuration);

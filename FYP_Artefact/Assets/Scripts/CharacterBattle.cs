@@ -7,6 +7,8 @@ public class CharacterBattle : MonoBehaviour
 {
     private CharacterBase characterBase;
     private Animator animator;
+    
+    private HealthSystem healthSystem;
 
     [Header("Animators")]
     [SerializeField] private RuntimeAnimatorController playerAnimator;
@@ -28,9 +30,10 @@ public class CharacterBattle : MonoBehaviour
             isPlayerTeam ? playerAnimator : enemyAnimator;
 
         // Player faces right → enemy faces left (or vice versa)
-        characterBase.FaceDirection(isPlayerTeam);
-
+        characterBase.FaceDirection(isPlayerTeam); 
         // Animator will already default to Idle
+
+        healthSystem = new HealthSystem(100);
     }
 
     #region ---------- BATTLE COMMANDS ----------
@@ -42,11 +45,20 @@ public class CharacterBattle : MonoBehaviour
 
         public void Attack(CharacterBattle target, Action onAttackComplete)
         {
-            characterBase.AttackEnemy(target.transform, onAttackComplete);
+            characterBase.AttackEnemy(target.transform, () => { target.Damage(10); }, onAttackComplete);
         }
         
     #endregion
 
+    public void Damage(int damageAmount)
+    {
+        healthSystem.Damage(damageAmount);
+    }
+
+    public bool IsDead()
+    {
+        return healthSystem.IsDead();
+    }
     
 }
 

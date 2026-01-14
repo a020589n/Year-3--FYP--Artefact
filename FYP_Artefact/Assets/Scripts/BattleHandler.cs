@@ -1,36 +1,48 @@
-using System;
-using System.Numerics;
 using UnityEngine;
-using UnityEngine.Serialization;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 public class BattleHandler : MonoBehaviour
 {
-    [SerializeField] private Transform characterInBattle;
-    
-    [Tooltip("This sets the offset for the player character. " +
-             "The position of the enemy is the negative of this player offset.")]
-    [SerializeField] [Range(0, 10)] private float positionOffsetFromCentre;
+    [Header("Prefabs")]
+    [SerializeField] private CharacterBattle characterPrefab;
+
+    [Header("Positioning")]
+    [SerializeField, Range(0, 10)] private float positionOffsetFromCentre = 3f;
+
+    public static BattleHandler Instance { get; private set; }
+
+    // Public references for UI / turn system
+    public CharacterBattle PlayerCharacter { get; private set; }
+    public CharacterBattle EnemyCharacter { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
 
     private void Start()
     {
-        //Spawn Player
-        SpawnCharacter(true);
-        
-        //Spawn Enemy
-        SpawnCharacter(false);
+        PlayerCharacter = SpawnCharacter(true);
+        EnemyCharacter  = SpawnCharacter(false);
     }
 
-    private void SpawnCharacter(bool isPlayerTeam)
+    private CharacterBattle SpawnCharacter(bool isPlayerTeam)
     {
-        Vector3 position;
-        
-        //Debug.Log(isPlayerTeam);
+        Vector3 position = isPlayerTeam
+            ? new Vector3(positionOffsetFromCentre, 0, 0)
+            : new Vector3(-positionOffsetFromCentre, 0, 0);
 
-        // If isPlayerTeam = true, position is set to right, else position is set to left.
-        position = isPlayerTeam ? new Vector3(positionOffsetFromCentre, 0) : new Vector3(-positionOffsetFromCentre, 0);
-        
-        Instantiate(characterInBattle, position, Quaternion.identity);
+        CharacterBattle character =
+            Instantiate(characterPrefab, position, Quaternion.identity);
+
+        character.Setup(isPlayerTeam);
+        return character;
     }
 }
+
+

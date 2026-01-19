@@ -3,8 +3,10 @@ using UnityEngine;
 
 public class HealthSystem
 {
-    public event EventHandler OnHealthChanged;
+    public event Action<float> OnHealthChanged;
     public event EventHandler OnDead;
+    
+    private HealthBar _healthBar;
     
     private int healthMax = 100;
     private int healthCurrent;
@@ -21,7 +23,8 @@ public class HealthSystem
 
         if (OnHealthChanged != null)
         {
-            OnHealthChanged(this, EventArgs.Empty);
+            OnHealthChanged?.Invoke(GetHealthPercentage());
+
         }
     }
 
@@ -46,7 +49,7 @@ public class HealthSystem
         
         if (OnHealthChanged != null)
         {
-            OnHealthChanged(this, EventArgs.Empty);
+            OnHealthChanged?.Invoke(GetHealthPercentage());
         }
 
         if (healthCurrent <= 0)
@@ -79,9 +82,9 @@ public class HealthSystem
         
         if (OnHealthChanged != null)
         {
-            OnHealthChanged(this, EventArgs.Empty);
+            OnHealthChanged?.Invoke(GetHealthPercentage());
+            
         }
-        
     }
 }
 

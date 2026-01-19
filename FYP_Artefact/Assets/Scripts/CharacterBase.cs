@@ -27,11 +27,11 @@ public class CharacterBase : MonoBehaviour
     protected virtual void Awake()
     {
         if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
+        {spriteRenderer = GetComponent<SpriteRenderer>();}
 
         if (animator == null)
-            animator = GetComponent<Animator>();
-        
+        {animator = GetComponent<Animator>();}
+
         Debug.Log($"SpriteRenderer found: {spriteRenderer != null}");
         Debug.Log($"Animator found: {animator != null}");
 
@@ -66,7 +66,7 @@ public class CharacterBase : MonoBehaviour
         // Run toward enemy
         SetRun(true);
 
-        while (Vector3.Distance(transform.position, target.position) > 0.5f)
+        while (Vector3.Distance(transform.position, target.position) > 1.0f)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position,
@@ -107,12 +107,43 @@ public class CharacterBase : MonoBehaviour
 
     #region ---------- FACING ----------
     
+        // public void FaceDirection(bool faceRight)
+        // {
+        //     Vector3 scale = transform.localScale;
+        //     scale.x = Mathf.Abs(scale.x) * (faceRight ? -1 : 1);
+        //     transform.localScale = scale;
+        //     
+        //     // Keep HealthBar facing correctly
+        //     HealthBar healthBar = GetComponentInChildren<HealthBar>();
+        //     if (healthBar != null)
+        //     {
+        //         Vector3 hbScale = healthBar.transform.localScale;
+        //         hbScale.x = Mathf.Abs(hbScale.x);
+        //         healthBar.transform.localScale = hbScale;
+        //     }
+        // }
+        
         public void FaceDirection(bool faceRight)
         {
+            HealthBar healthBar = GetComponentInChildren<HealthBar>();
+
+            Transform hbTransform = null;
+            if (healthBar != null)
+            {
+                hbTransform = healthBar.transform;
+                hbTransform.SetParent(null, true); // detach, keep world transform
+            }
+
             Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * (faceRight ? 1 : -1);
+            scale.x = Mathf.Abs(scale.x) * (faceRight ? -1 : 1);
             transform.localScale = scale;
+
+            if (hbTransform != null)
+            {
+                hbTransform.SetParent(transform, true); // reattach, keep world transform
+            }
         }
+
     
     #endregion
 }

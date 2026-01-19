@@ -9,6 +9,8 @@ public class CharacterBattle : MonoBehaviour
     private Animator animator;
     
     private HealthSystem healthSystem;
+    private HealthBar healthBar;
+
 
     [Header("Animators")]
     [SerializeField] private RuntimeAnimatorController playerAnimator;
@@ -34,6 +36,12 @@ public class CharacterBattle : MonoBehaviour
         // Animator will already default to Idle
 
         healthSystem = new HealthSystem(100);
+        
+        healthBar = GetComponentInChildren<HealthBar>();
+        if (healthBar != null)
+        {
+            healthBar.Bind(healthSystem);
+        }
     }
 
     #region ---------- BATTLE COMMANDS ----------
@@ -45,7 +53,7 @@ public class CharacterBattle : MonoBehaviour
 
         public void Attack(CharacterBattle target, Action onAttackComplete)
         {
-            characterBase.AttackEnemy(target.transform, () => { target.Damage(10); }, onAttackComplete);
+            characterBase.AttackEnemy(target.transform, () => { target.Damage(25); }, onAttackComplete);
         }
         
     #endregion
@@ -59,7 +67,6 @@ public class CharacterBattle : MonoBehaviour
     {
         return healthSystem.IsDead();
     }
-    
 }
 
 

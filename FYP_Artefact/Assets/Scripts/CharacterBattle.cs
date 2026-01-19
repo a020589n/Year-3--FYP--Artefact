@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(CharacterBase))]
 [RequireComponent(typeof(Animator))]
@@ -10,6 +11,11 @@ public class CharacterBattle : MonoBehaviour
     
     private HealthSystem healthSystem;
     private HealthBar healthBar;
+
+    [Header("Damage")]
+    [SerializeField] private int minDamage = 5;
+    [SerializeField] private int maxDamage = 10;
+    private bool _isCriticalHit = false;
 
 
     [Header("Animators")]
@@ -52,20 +58,36 @@ public class CharacterBattle : MonoBehaviour
         }
 
         public void Attack(CharacterBattle target, Action onAttackComplete)
-        {
-            characterBase.AttackEnemy(target.transform, () => { target.Damage(25); }, onAttackComplete);
+        { 
+            int damageAmount = Random.Range(minDamage, maxDamage + 1);
+            characterBase.AttackEnemy(target.transform, () => { target.Damage(damageAmount); }, onAttackComplete);
         }
         
     #endregion
 
-    
-    public void Damage(int damageAmount)
-    {
-        healthSystem.Damage(damageAmount);
-        
+
+    private void Damage(int damageAmount)
+    { 
         // Spawn damage popup above the character
+        if (damageAmount == maxDamage)
+        {
+            _isCriticalHit = true;
+        }
+        else
+        {
+            _isCriticalHit = false;
+        }
+        
         Vector3 popupPosition = transform.position + Vector3.up * 2f;
-        DamagePopup.Create(popupPosition, damageAmount, false);
+        DamagePopup.Create(popupPosition, damageAmount, _isCriticalHit);
+        
+        //Deal Damage and Check for Death
+        healthSystem.Damage(damageAmount);
+
+        if (healthSystem.IsDead())
+        {
+            //trigger death events. Play victory screen or defeat screen
+        }
     }
 
     public bool IsDead()

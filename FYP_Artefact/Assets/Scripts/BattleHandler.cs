@@ -117,10 +117,12 @@ public class BattleHandler : MonoBehaviour
     {
         if (PlayerCharacter.IsDead())
         {
+            BattleOverWindow.ShowBattleOverWindow("DEFEAT");
             return true;
         }
         if (EnemyCharacter.IsDead())
         {
+            BattleOverWindow.ShowBattleOverWindow("VICTORY");
             return true;
         }
         

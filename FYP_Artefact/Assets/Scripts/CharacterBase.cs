@@ -66,7 +66,7 @@ public class CharacterBase : MonoBehaviour
         // Run toward enemy
         SetRun(true);
 
-        while (Vector3.Distance(transform.position, target.position) > 1.0f)
+        while (Vector3.Distance(transform.position, target.position) > 2.0f)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position,
@@ -106,22 +106,6 @@ public class CharacterBase : MonoBehaviour
 
 
     #region ---------- FACING ----------
-    
-        // public void FaceDirection(bool faceRight)
-        // {
-        //     Vector3 scale = transform.localScale;
-        //     scale.x = Mathf.Abs(scale.x) * (faceRight ? -1 : 1);
-        //     transform.localScale = scale;
-        //     
-        //     // Keep HealthBar facing correctly
-        //     HealthBar healthBar = GetComponentInChildren<HealthBar>();
-        //     if (healthBar != null)
-        //     {
-        //         Vector3 hbScale = healthBar.transform.localScale;
-        //         hbScale.x = Mathf.Abs(hbScale.x);
-        //         healthBar.transform.localScale = hbScale;
-        //     }
-        // }
         
         public void FaceDirection(bool faceRight)
         {
@@ -143,8 +127,7 @@ public class CharacterBase : MonoBehaviour
                 hbTransform.SetParent(transform, true); // reattach, keep world transform
             }
         }
-
-    
+        
     #endregion
 }
 

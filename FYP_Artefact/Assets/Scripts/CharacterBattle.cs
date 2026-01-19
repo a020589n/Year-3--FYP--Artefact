@@ -58,9 +58,14 @@ public class CharacterBattle : MonoBehaviour
         
     #endregion
 
+    
     public void Damage(int damageAmount)
     {
         healthSystem.Damage(damageAmount);
+        
+        // Spawn damage popup above the character
+        Vector3 popupPosition = transform.position + Vector3.up * 2f;
+        DamagePopup.Create(popupPosition, damageAmount, false);
     }
 
     public bool IsDead()

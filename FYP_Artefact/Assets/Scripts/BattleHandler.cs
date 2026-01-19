@@ -7,6 +7,7 @@ public class BattleHandler : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private CharacterBattle characterPrefab;
+    public Transform damagePopupPrefab;
 
     [Header("Positioning")]
     [SerializeField, Range(0, 10)] private float positionOffsetFromCentre = 3f;

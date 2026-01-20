@@ -60,7 +60,7 @@ public class BattleHandler : MonoBehaviour
             {
                 _state = State.Busy;
                 
-                PlayerCharacter.Attack(EnemyCharacter, () => { ChooseNextActiveCharacter(); });
+                //PlayerCharacter.Attack(EnemyCharacter, () => { ChooseNextActiveCharacter(); });
             }
         }
         
@@ -104,7 +104,7 @@ public class BattleHandler : MonoBehaviour
             
             _state = State.Busy;
             
-            EnemyCharacter.Attack(PlayerCharacter, () => { ChooseNextActiveCharacter(); });
+            //EnemyCharacter.Attack(PlayerCharacter, () => { ChooseNextActiveCharacter(); });
         }
         else
         {

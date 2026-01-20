@@ -8,38 +8,47 @@ public class DamagePopup : MonoBehaviour
     [SerializeField] private string regularHitFontColour = "#FFA500";
     [SerializeField] private float criticalHitFontSize = 5f;
     [SerializeField] private string criticalHitFontColour = "#FF0000";
+    [SerializeField] private string healingFontColour = "#00FF00";
     
     private TMP_Text _textMesh;
     private Color _textColor;
     private float _disappearTimer;
 
     // Create a DamagePopup
-    public static DamagePopup Create(Vector3 position, int damageAmount, bool isCriticalHit)
+    public static DamagePopup Create(Vector3 position, int damageAmount, bool isCriticalHit, bool isHealing)
     {
         Transform damagePopupTransform = Instantiate(BattleHandler.Instance.damagePopupPrefab, 
             position, Quaternion.identity);
         DamagePopup damagePopupScript = damagePopupTransform.GetComponent<DamagePopup>();
    
-        damagePopupScript.DamagePopupSetup(damageAmount, isCriticalHit);
+        damagePopupScript.DamagePopupSetup(damageAmount, isCriticalHit, isHealing);
         
         return damagePopupScript;
     }
 
-    private void DamagePopupSetup(int damageAmount, bool isCriticalHit)
+    private void DamagePopupSetup(int damageAmount, bool isCriticalHit, bool isHealing)
     {
         _textMesh.SetText(damageAmount.ToString());
 
-        if (!isCriticalHit)
+        if (isHealing)
         {
-            //Is not a Critical hit
+            _textMesh.fontSize = criticalHitFontSize;
+        
+            _textColor = ColourFromString(healingFontColour);
+        }
+        
+        if (!isCriticalHit  && !isHealing)
+        {
+            //Is not a Critical hit and Not Healing
             
             _textMesh.fontSize = regularHitFontSize;
 
             _textColor = ColourFromString(regularHitFontColour);
         }
-        else
+        
+        if (isCriticalHit && !isHealing)
         {
-            //Is a Critical Hit
+            //Is a Critical Hit and Not Healing
             
             _textMesh.fontSize = criticalHitFontSize;
         

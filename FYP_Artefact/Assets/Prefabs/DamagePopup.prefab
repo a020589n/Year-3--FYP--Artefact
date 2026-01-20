@@ -198,3 +198,4 @@ MonoBehaviour:
   regularHitFontColour: '#FFA500'
   criticalHitFontSize: 10
   criticalHitFontColour: '#FF0000'
+  healingFontColour: '#00FF00'

@@ -1,35 +1,39 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public class BattleHandler : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private CharacterBattle characterPrefab;
     public Transform damagePopupPrefab;
+    
+    [Header("UI")]
+    [SerializeField] private RPSPlayerUI playerUI;
+
+    [Header("Enemy AI")]
+    [SerializeField] private CombatEnums.EnemyAIType enemyAIType;
+    [SerializeField] private float adaptiveWithCheatPercentage = 0.2f;
+    [SerializeField] private bool intelligent = true;
 
     [Header("Positioning")]
     [SerializeField, Range(0, 10)] private float positionOffsetFromCentre = 3f;
 
     public static BattleHandler Instance { get; private set; }
     
-    //TEMPORARY TESTING PURPOSES ONLY
-    [SerializeField] private InputAction attack;
-
-    // Public references for UI / turn system
-    public CharacterBattle PlayerCharacter { get; private set; }
-    public CharacterBattle EnemyCharacter { get; private set; }
+    private CombatIntent _playerIntent;
+    private CombatIntent _enemyIntent;
     
-    public CharacterBattle ActiveCharacter { get; private set; }
-
-    private State _state;
-    private enum State
-    {
-        WaitingForPlayer,
-        Busy,
-    }
-
+    //private readonly List<CombatIntent> _playerHistory = new();
+    
+    private readonly Dictionary<CombatEnums.RPSChoice, int> playerAttackCounts = new();
+    private readonly Dictionary<CombatEnums.RPSChoice, int> playerDefendCounts = new();
+    
+    private CharacterBattle PlayerCharacter { get; set; }
+    private CharacterBattle EnemyCharacter { get; set; }
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -46,34 +50,13 @@ public class BattleHandler : MonoBehaviour
         PlayerCharacter = SpawnCharacter(true);
         EnemyCharacter  = SpawnCharacter(false);
         
-        SetActiveCharacter(PlayerCharacter);
-        
-        _state = State.WaitingForPlayer;
-    }
-
-    private void Update()
-    {
-        if (_state == State.WaitingForPlayer)
+        foreach (CombatEnums.RPSChoice choice in Enum.GetValues(typeof(CombatEnums.RPSChoice)))
         {
-            
-            if (attack.triggered)
-            {
-                _state = State.Busy;
-                
-                //PlayerCharacter.Attack(EnemyCharacter, () => { ChooseNextActiveCharacter(); });
-            }
+            playerAttackCounts[choice] = 0;
+            playerDefendCounts[choice] = 0;
         }
         
-    }
-    
-    private void OnEnable()
-    {
-        attack.Enable();
-    }
-    
-    private void OnDisable()
-    {
-        attack.Disable();
+        StartPlayerTurn();
     }
 
     private CharacterBattle SpawnCharacter(bool isPlayerTeam)
@@ -89,31 +72,209 @@ public class BattleHandler : MonoBehaviour
         return character;
     }
 
-    private void SetActiveCharacter(CharacterBattle character)
+
+    #region ---------- PLAYER TURN ----------
+    
+    
+    private void StartPlayerTurn()
     {
-        ActiveCharacter = character;
+        if (playerUI == null)
+        {
+            Debug.LogError("Player UI not assigned on BattleHandler");
+            return;
+        }
+
+        playerUI.Show();
     }
 
-    private void ChooseNextActiveCharacter()
+    public void OnPlayerIntentChosen(CombatIntent intent)
     {
-        if (IsBattleOver()) { return; }
+        playerAttackCounts[intent.AttackChoice]++;
+        playerDefendCounts[intent.DefendChoice]++;
         
-        if (ActiveCharacter == PlayerCharacter)
-        {
-            SetActiveCharacter(EnemyCharacter);
-            
-            _state = State.Busy;
-            
-            //EnemyCharacter.Attack(PlayerCharacter, () => { ChooseNextActiveCharacter(); });
-        }
-        else
-        {
-            SetActiveCharacter(PlayerCharacter);
-            _state = State.WaitingForPlayer;
-        }
+        _playerIntent = intent;
+        //_playerHistory.Add(intent);
+
+        ExecutePlayerTurn();
     }
 
-    private bool IsBattleOver()
+    private void ExecutePlayerTurn()
+    {
+        // Enemy prepares intent WITHOUT knowing the player's choices (no cheating)
+        _enemyIntent = GenerateEnemyIntent(allowCheatPeek: false);
+
+        PlayerCharacter.ExecuteTurn(
+            EnemyCharacter,
+            _playerIntent,
+            _enemyIntent,
+            OnPlayerTurnComplete
+        );
+    }
+
+    private void OnPlayerTurnComplete()
+    {
+        if (CheckBattleOver()) {return;}
+        ExecuteEnemyTurn();
+    }
+    
+    #endregion
+
+    #region ---------- ENEMY TURN ----------
+    
+    private void ExecuteEnemyTurn()
+    {
+        bool allowCheat =
+            enemyAIType == CombatEnums.EnemyAIType.AdaptiveWithCheat
+            && Random.value < adaptiveWithCheatPercentage;
+
+        _enemyIntent = GenerateEnemyIntent(allowCheat);
+
+        EnemyCharacter.ExecuteTurn(
+            PlayerCharacter,
+            _enemyIntent,
+            _playerIntent,
+            OnEnemyTurnComplete
+        );
+    }
+
+    private void OnEnemyTurnComplete()
+    {
+        if (CheckBattleOver()) {return;}
+        StartPlayerTurn();
+    }
+    
+    #endregion
+
+    #region ---------- AI LOGIC ----------
+
+    private CombatIntent GenerateEnemyIntent(bool allowCheatPeek)
+    {
+        return enemyAIType switch
+        {
+            CombatEnums.EnemyAIType.Random =>
+                RandomIntent(),
+
+            CombatEnums.EnemyAIType.Adaptive =>
+                AdaptiveIntent(),
+
+            CombatEnums.EnemyAIType.AdaptiveWithCheat =>
+                allowCheatPeek
+                    ? CheatingAdaptiveIntent(_playerIntent)
+                    : AdaptiveIntent(),
+
+            _ => RandomIntent()
+        };
+    }
+
+    private CombatIntent RandomIntent()
+    {
+        CombatEnums.RPSChoice attack = (CombatEnums.RPSChoice)Random.Range(0, 3);
+        CombatEnums.RPSChoice defend;
+        do
+        {
+            defend = (CombatEnums.RPSChoice)Random.Range(0, 3);
+        } while (defend == attack);
+
+        return new CombatIntent(attack, defend);
+    }
+
+    private CombatIntent AdaptiveIntent()
+    {
+        // Fallback if no data yet
+        if (playerAttackCounts.Values.All(v => v == 0))
+            return RandomIntent();
+
+        // ----- ATTACK SELECTION -----
+        // Prefer attacks that beat commonly-used player defences
+        CombatEnums.RPSChoice attack = WeightedAttackChoice();
+
+        // ----- DEFENCE SELECTION -----
+        // Prefer healing or blocking depending on intelligence
+        CombatEnums.RPSChoice defend = WeightedDefenceChoice(attack);
+
+        return new CombatIntent(attack, defend);
+    }
+    
+    private CombatIntent CheatingAdaptiveIntent(CombatIntent playerIntent)
+    {
+        CombatEnums.RPSChoice attack = Counter(playerIntent.DefendChoice);
+
+        CombatEnums.RPSChoice defend = intelligent
+            ? playerIntent.AttackChoice           // heal
+            : Counter(playerIntent.AttackChoice); // block
+
+        return new CombatIntent(attack, defend);
+    }
+    
+    private CombatEnums.RPSChoice WeightedAttackChoice()
+    {
+        Dictionary<CombatEnums.RPSChoice, float> weights = new();
+
+        foreach (CombatEnums.RPSChoice choice in Enum.GetValues(typeof(CombatEnums.RPSChoice)))
+        {
+            // want to attack with something that beats common defences
+            CombatEnums.RPSChoice beats = Counter(choice);
+            if (!weights.ContainsKey(beats))
+                weights[beats] = 0;
+
+            weights[beats] += playerDefendCounts[choice] + 1;
+        }
+
+        return PickWeighted(weights);
+    }
+    
+    private CombatEnums.RPSChoice WeightedDefenceChoice(CombatEnums.RPSChoice myAttack)
+    {
+        Dictionary<CombatEnums.RPSChoice, float> weights = new();
+
+        foreach (CombatEnums.RPSChoice choice in Enum.GetValues(typeof(CombatEnums.RPSChoice)))
+        {
+            if (choice == myAttack) continue;
+
+            // Healing: same as player's common attack
+            if (intelligent && playerAttackCounts[choice] > 0)
+            {
+                weights[choice] = playerAttackCounts[choice] * 2f;
+            }
+            else
+            {
+                // Blocking: loses to player's common attack
+                weights[choice] = playerAttackCounts[Counter(choice)];
+            }
+        }
+
+        return PickWeighted(weights);
+    }
+    
+    private CombatEnums.RPSChoice PickWeighted(Dictionary<CombatEnums.RPSChoice, float> weights)
+    {
+        float total = weights.Values.Sum();
+        float roll = Random.value * total;
+
+        foreach (var pair in weights)
+        {
+            roll -= pair.Value;
+            if (roll <= 0)
+                return pair.Key;
+        }
+
+        return weights.Keys.First();
+    }
+    
+    private CombatEnums.RPSChoice Counter(CombatEnums.RPSChoice choice)
+    {
+        return choice switch
+        {
+            CombatEnums.RPSChoice.Rock => CombatEnums.RPSChoice.Paper,
+            CombatEnums.RPSChoice.Paper => CombatEnums.RPSChoice.Scissors,
+            CombatEnums.RPSChoice.Scissors => CombatEnums.RPSChoice.Rock,
+            _ => CombatEnums.RPSChoice.Rock
+        };
+    }
+    
+    #endregion
+
+    private bool CheckBattleOver()
     {
         if (PlayerCharacter.IsDead())
         {
@@ -129,4 +290,3 @@ public class BattleHandler : MonoBehaviour
         return false;
     }
 }
-

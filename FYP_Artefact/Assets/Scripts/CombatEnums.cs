@@ -22,5 +22,12 @@ public static class CombatEnums
         HealDefender,
         Nothing
     }
+    
+    public enum EnemyAIType
+    {
+        Random,
+        Adaptive,
+        AdaptiveWithCheat
+    }
 
 }

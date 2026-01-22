@@ -15,6 +15,7 @@ public class CharacterBattle : MonoBehaviour
     [Header("Damage")]
     [SerializeField] private int minDamage = 5;
     [SerializeField] private int maxDamage = 10;
+    private int damageRoll = 0;
 
 
     [Header("Animators")]
@@ -79,6 +80,8 @@ public class CharacterBattle : MonoBehaviour
         var defendOutcome = RPSRulesResolver.ResolveOutcome(targetIntent.AttackChoice, myIntent.DefendChoice);
         var defendEffect = RPSOutcomeEffectMap.GetEffect(defendOutcome);
         
+        damageRoll = Random.Range(minDamage, maxDamage + 1);
+        
         // Perform animated attack
         characterBase.AttackEnemy(
             target.transform,
@@ -87,12 +90,14 @@ public class CharacterBattle : MonoBehaviour
             () =>
             {
                 // Apply attack effect
-                ApplyEffect(target, attackEffect);
+                ApplyEffect(target, attackEffect, damageRoll);
                 
                 // Only heal if defending character
                 if (defendEffect == CombatEnums.CombatEffect.HealDefender)
                 {
-                    ApplyEffect(this, defendEffect);
+                    characterBase.Guard();
+                    
+                    //ApplyEffect(this, defendEffect, damageRoll);
                 }
             },
 
@@ -109,9 +114,8 @@ public class CharacterBattle : MonoBehaviour
     /// <summary>
     /// Applies a CombatEffect to a character
     /// </summary>
-    private void ApplyEffect(CharacterBattle target, CombatEnums.CombatEffect effect/*, CombatEnums.RPSChoice attackChoice = CombatEnums.RPSChoice.Rock*/)
+    private void ApplyEffect(CharacterBattle target, CombatEnums.CombatEffect effect, int damageAmount)
     {
-        int damageAmount = Random.Range(minDamage, maxDamage + 1);
 
         switch (effect)
         {
@@ -120,8 +124,8 @@ public class CharacterBattle : MonoBehaviour
                 break;
 
             case CombatEnums.CombatEffect.HealDefender:
-                // Heal amount = would-be damage
-                target.Heal(damageAmount);
+                //Heal amount = 1/3 of would-be damage, rounded down
+                target.Heal(Mathf.FloorToInt(damageAmount / 3f));
                 break;
 
             case CombatEnums.CombatEffect.Nothing:

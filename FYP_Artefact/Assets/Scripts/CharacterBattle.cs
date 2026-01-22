@@ -75,18 +75,31 @@ public class CharacterBattle : MonoBehaviour
         var attackOutcome = RPSRulesResolver.ResolveOutcome(myIntent.AttackChoice, targetIntent.DefendChoice);
         var attackEffect = RPSOutcomeEffectMap.GetEffect(attackOutcome);
 
-        // Apply attack effect
-        ApplyEffect(target, attackEffect);
-
         // Determine defend effect (other way round)
         var defendOutcome = RPSRulesResolver.ResolveOutcome(targetIntent.AttackChoice, myIntent.DefendChoice);
         var defendEffect = RPSOutcomeEffectMap.GetEffect(defendOutcome);
+        
+        // Perform animated attack
+        characterBase.AttackEnemy(
+            target.transform,
 
-        // Apply defend effect
-        ApplyEffect(this, defendEffect, targetIntent.AttackChoice);
+            // ON HIT (mid-animation)
+            () =>
+            {
+                // Apply attack effect
+                ApplyEffect(target, attackEffect);
+                
+                // Only heal if defending character
+                if (defendEffect == CombatEnums.CombatEffect.HealDefender)
+                {
+                    ApplyEffect(this, defendEffect);
+                }
+            },
 
-        // Callbacks for completion
-        onTurnComplete?.Invoke();
+            // ON ATTACK COMPLETE (after slide back)
+            //This is passing a function, not calling a function. Ask Luke because it seems to work???
+            onTurnComplete
+        );
     }
 
     #endregion
@@ -96,7 +109,7 @@ public class CharacterBattle : MonoBehaviour
     /// <summary>
     /// Applies a CombatEffect to a character
     /// </summary>
-    private void ApplyEffect(CharacterBattle target, CombatEnums.CombatEffect effect, CombatEnums.RPSChoice attackChoice = CombatEnums.RPSChoice.Rock)
+    private void ApplyEffect(CharacterBattle target, CombatEnums.CombatEffect effect/*, CombatEnums.RPSChoice attackChoice = CombatEnums.RPSChoice.Rock*/)
     {
         int damageAmount = Random.Range(minDamage, maxDamage + 1);
 

@@ -1182,7 +1182,7 @@ MonoBehaviour:
   playerUI: {fileID: 1690738605}
   enemyAIType: 0
   adaptiveWithCheatPercentage: 0.2
-  intelligent: 1
+  intelligent: 0
   positionOffsetFromCentre: 7
 --- !u!4 &1421534178
 Transform:

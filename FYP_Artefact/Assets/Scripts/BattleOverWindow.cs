@@ -1,11 +1,15 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class BattleOverWindow : MonoBehaviour
 {
     private static BattleOverWindow _instance;
+    
+    [Header("Scene Management")]
+    [SerializeField] private string mainMenuSceneName;
 
     private void Awake()
     {
@@ -32,5 +36,16 @@ public class BattleOverWindow : MonoBehaviour
     public static void ShowBattleOverWindow(string winnerString)
     {
         _instance.Show(winnerString);
+    }
+    
+    public void OnRetryPressed()
+    {
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.buildIndex);
+    }
+    
+    public void OnMainMenuPressed()
+    {
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 }

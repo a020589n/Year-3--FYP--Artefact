@@ -21,6 +21,9 @@ public class CharacterBattle : MonoBehaviour
     [Header("Animators")]
     [SerializeField] private RuntimeAnimatorController playerAnimator;
     [SerializeField] private RuntimeAnimatorController enemyAnimator;
+    
+    [Header("RPS Icon")]
+    private RPSIntentDisplay intentIcon;
 
     public bool IsPlayer { get; private set; }
 
@@ -28,6 +31,8 @@ public class CharacterBattle : MonoBehaviour
     {
         characterBase = GetComponent<CharacterBase>();
         animator = GetComponent<Animator>();
+        
+        intentIcon = GetComponent<RPSIntentDisplay>();
     }
 
     public void Setup(bool isPlayerTeam)
@@ -48,21 +53,31 @@ public class CharacterBattle : MonoBehaviour
         {
             healthBar.Bind(healthSystem);
         }
+        
+        //Tint enemy characters red (player remains unchanged)
+        if (!isPlayerTeam)
+        {
+            characterBase.GetComponent<SpriteRenderer>().color = Color.red;
+        }
     }
 
-    #region ---------- OLD BATTLE COMMANDS ----------
-    
-        // public void Guard()
-        // {
-        //     characterBase.Guard();
-        // }
-        //
-        // public void Attack(CharacterBattle target, Action onAttackComplete)
-        // { 
-        //     int damageAmount = Random.Range(minDamage, maxDamage + 1);
-        //     characterBase.AttackEnemy(target.transform, () => { target.Damage(damageAmount); }, onAttackComplete);
-        // }
-        
+    #region ---------- RPS ICON COMMANDS ----------
+
+    public void ShowAttackIcon(CombatEnums.RPSChoice choice)
+    {
+        intentIcon?.ShowAttack(choice);
+    }
+
+    public void ShowDefendIcon(CombatEnums.RPSChoice choice)
+    {
+        intentIcon?.ShowDefend(choice);
+    }
+
+    public void ClearIntentIcon()
+    {
+        intentIcon?.Clear();
+    }
+
     #endregion
     
     #region ---------- BATTLE COMMANDS ----------
@@ -72,6 +87,10 @@ public class CharacterBattle : MonoBehaviour
     /// </summary>
     public void ExecuteTurn(CharacterBattle target, CombatIntent myIntent, CombatIntent targetIntent, Action onTurnComplete)
     {
+        // SHOW INTENT ICONS
+        intentIcon.ShowAttack(myIntent.AttackChoice);
+        target.intentIcon.ShowDefend(targetIntent.DefendChoice);
+        
         // Determine attack effect
         var attackOutcome = RPSRulesResolver.ResolveOutcome(myIntent.AttackChoice, targetIntent.DefendChoice);
         var attackEffect = RPSOutcomeEffectMap.GetEffect(attackOutcome);

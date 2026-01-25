@@ -32,8 +32,8 @@ public class CharacterBase : MonoBehaviour
         if (animator == null)
         {animator = GetComponent<Animator>();}
 
-        Debug.Log($"SpriteRenderer found: {spriteRenderer != null}");
-        Debug.Log($"Animator found: {animator != null}");
+        //Debug.Log($"SpriteRenderer found: {spriteRenderer != null}");
+        //Debug.Log($"Animator found: {animator != null}");
 
 
         startPos = transform.position;

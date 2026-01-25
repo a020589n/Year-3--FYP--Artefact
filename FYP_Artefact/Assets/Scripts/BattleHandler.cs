@@ -93,7 +93,10 @@ public class BattleHandler : MonoBehaviour
         playerDefendCounts[intent.DefendChoice]++;
         
         _playerIntent = intent;
-        //_playerHistory.Add(intent);
+        //_enemyIntent = GenerateEnemyIntent(false);
+        
+        PlayerCharacter.ShowAttackIcon(intent.AttackChoice);
+        EnemyCharacter.ShowDefendIcon(intent.DefendChoice);
 
         ExecutePlayerTurn();
     }
@@ -114,6 +117,10 @@ public class BattleHandler : MonoBehaviour
     private void OnPlayerTurnComplete()
     {
         if (CheckBattleOver()) {return;}
+        
+        PlayerCharacter.ClearIntentIcon();
+        EnemyCharacter.ClearIntentIcon();
+        
         ExecuteEnemyTurn();
     }
     
@@ -128,6 +135,9 @@ public class BattleHandler : MonoBehaviour
             && Random.value < adaptiveWithCheatPercentage;
 
         _enemyIntent = GenerateEnemyIntent(allowCheat);
+        
+        EnemyCharacter.ShowAttackIcon(_enemyIntent.AttackChoice);
+        PlayerCharacter.ShowDefendIcon(_playerIntent.DefendChoice);
 
         EnemyCharacter.ExecuteTurn(
             PlayerCharacter,
@@ -140,6 +150,10 @@ public class BattleHandler : MonoBehaviour
     private void OnEnemyTurnComplete()
     {
         if (CheckBattleOver()) {return;}
+        
+        PlayerCharacter.ClearIntentIcon();
+        EnemyCharacter.ClearIntentIcon();
+        
         StartPlayerTurn();
     }
     

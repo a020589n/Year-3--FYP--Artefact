@@ -180,12 +180,20 @@ public class BattleHandler : MonoBehaviour
         };
     }
     
-    private CombatEnums.RPSChoice GetDifferentChoice(
-        CombatEnums.RPSChoice original,
-        CombatEnums.RPSChoice fallback1,
-        CombatEnums.RPSChoice fallback2)
+    private CombatEnums.RPSChoice PickDifferent (CombatEnums.RPSChoice forbidden)
     {
-        return original != fallback1 ? fallback1 : fallback2;
+        //Forcibly changes choice to make sure defence != attack
+        CombatEnums.RPSChoice[] all =
+            (CombatEnums.RPSChoice[])Enum.GetValues(typeof(CombatEnums.RPSChoice));
+
+        CombatEnums.RPSChoice choice;
+        do
+        {
+            choice = all[Random.Range(0, all.Length)];
+        }
+        while (choice == forbidden);
+
+        return choice;
     }
 
     private CombatIntent RandomIntent()
@@ -215,7 +223,7 @@ public class BattleHandler : MonoBehaviour
 
         if (defend == attack)
         {
-            defend = Counter(attack);
+            defend = PickDifferent(attack);
         }
 
         return new CombatIntent(attack, defend);
@@ -230,11 +238,10 @@ public class BattleHandler : MonoBehaviour
             ? playerIntent.AttackChoice           // heal attempt
             : Counter(playerIntent.AttackChoice); // block attempt
 
-        // Enforce defend != attack
         CombatEnums.RPSChoice defend =
             desiredDefend != attack
                 ? desiredDefend
-                : Counter(attack);
+                : PickDifferent(attack);
 
         return new CombatIntent(attack, defend);
     }

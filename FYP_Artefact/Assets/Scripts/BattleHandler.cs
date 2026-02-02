@@ -179,6 +179,14 @@ public class BattleHandler : MonoBehaviour
             _ => RandomIntent()
         };
     }
+    
+    private CombatEnums.RPSChoice GetDifferentChoice(
+        CombatEnums.RPSChoice original,
+        CombatEnums.RPSChoice fallback1,
+        CombatEnums.RPSChoice fallback2)
+    {
+        return original != fallback1 ? fallback1 : fallback2;
+    }
 
     private CombatIntent RandomIntent()
     {
@@ -195,8 +203,7 @@ public class BattleHandler : MonoBehaviour
     private CombatIntent AdaptiveIntent()
     {
         // Fallback if no data yet
-        if (playerAttackCounts.Values.All(v => v == 0))
-            return RandomIntent();
+        if (playerAttackCounts.Values.All(v => v == 0)) {return RandomIntent();}
 
         // ----- ATTACK SELECTION -----
         // Prefer attacks that beat commonly-used player defences
@@ -206,16 +213,28 @@ public class BattleHandler : MonoBehaviour
         // Prefer healing or blocking depending on intelligence
         CombatEnums.RPSChoice defend = WeightedDefenceChoice(attack);
 
+        if (defend == attack)
+        {
+            defend = Counter(attack);
+        }
+
         return new CombatIntent(attack, defend);
+
     }
     
     private CombatIntent CheatingAdaptiveIntent(CombatIntent playerIntent)
     {
         CombatEnums.RPSChoice attack = Counter(playerIntent.DefendChoice);
 
-        CombatEnums.RPSChoice defend = intelligent
-            ? playerIntent.AttackChoice           // heal
-            : Counter(playerIntent.AttackChoice); // block
+        CombatEnums.RPSChoice desiredDefend = intelligent
+            ? playerIntent.AttackChoice           // heal attempt
+            : Counter(playerIntent.AttackChoice); // block attempt
+
+        // Enforce defend != attack
+        CombatEnums.RPSChoice defend =
+            desiredDefend != attack
+                ? desiredDefend
+                : Counter(attack);
 
         return new CombatIntent(attack, defend);
     }
